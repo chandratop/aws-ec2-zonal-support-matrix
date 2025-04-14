@@ -1,0 +1,31 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Caches
+.ipynb_checkpoints/
+.cache/
+*.log
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# VSCode & JetBrains stuff
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+
+# Data
+*.json
+!metadata/ec2_instance_types.json  # keep your output JSON if you want
+
+# Streamlit specific
+.streamlit/
+
+# Notebooks
+*.ipynb
