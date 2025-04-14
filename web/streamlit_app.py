@@ -77,15 +77,3 @@ if st.sidebar.checkbox('Show full table', False):
 # Add spacer to push the button to the bottom
 for _ in range(10):
     st.sidebar.write("")
-
-# Use a standard button with custom styling
-st.sidebar.markdown(
-    """
-    <a href="https://github.com/chandratop/aws-ec2-zonal-support-matrix/tree/main" target="_blank" 
-       style="background-color:#F63366; color:white; text-decoration:none; font-weight:bold; 
-              padding:15px 0; text-align:center; display:block; border-radius:4px;">
-        View Source Code
-    </a>
-    """, 
-    unsafe_allow_html=True
-)
