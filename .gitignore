@@ -20,10 +20,6 @@ env/
 # System files
 .DS_Store
 
-# Data
-*.json
-!metadata/ec2_instance_types.json  # keep your output JSON if you want
-
 # Streamlit specific
 .streamlit/
 
