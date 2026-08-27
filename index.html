@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AWS EC2 Zonal Support Matrix</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --aws-dark:   #232F3E;
+      --aws-orange: #FF9900;
+      --bg:         #F2F3F3;
+      --white:      #FFFFFF;
+      --border:     #D5DBDB;
+      --text:       #16191F;
+      --muted:      #5F6B7A;
+      --green:      #067340;
+      --red:        #D13212;
+      --hover-row:  #EFF6FF;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--aws-dark);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid var(--aws-orange);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .logo { font-weight: 800; font-size: 18px; color: var(--aws-orange); letter-spacing: -0.5px; }
+    header h1 { font-size: 15px; font-weight: 500; color: #EAECEE; }
+    #last-updated { font-size: 11px; color: #AAB7B8; white-space: nowrap; }
+
+    /* ── Filters ── */
+    .filter-bar {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 5px; }
+    .filter-group label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    select, input[type="text"] {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 13px;
+      background: var(--white);
+      color: var(--text);
+    }
+    select:focus, input:focus { outline: 2px solid var(--aws-orange); outline-offset: -1px; }
+    select[multiple] { height: 84px; }
+    .filter-hint { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      padding: 7px 24px;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      gap: 20px;
+    }
+    .stats-bar strong { color: var(--text); }
+
+    /* ── Table ── */
+    .table-wrapper { padding: 20px 24px; overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--white);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+    thead tr th {
+      background: var(--aws-dark);
+      color: #EAECEE;
+      padding: 10px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      text-align: left;
+    }
+    thead tr th.zone { text-align: center; min-width: 58px; }
+    td {
+      padding: 7px 14px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+    td.zone { text-align: center; }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--hover-row); }
+
+    .cell-family { font-weight: 600; color: var(--aws-dark); }
+    .cell-type   { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; font-size: 12.5px; }
+    .cell-region { font-size: 12px; color: var(--muted); }
+
+    .check { color: var(--green); font-size: 15px; font-weight: 700; }
+    .cross { color: var(--border); font-size: 13px; }
+
+    /* family boundary row */
+    tr.family-sep td { border-top: 2px solid #E8EAED; }
+
+    /* ── Empty / loading ── */
+    .message {
+      text-align: center;
+      padding: 56px 24px;
+      color: var(--muted);
+    }
+    .message h2 { font-size: 17px; margin-bottom: 8px; color: var(--text); }
+
+    /* ── Legend ── */
+    .legend {
+      padding: 10px 24px 20px;
+      display: flex;
+      gap: 20px;
+      font-size: 12px;
+      color: var(--muted);
+      align-items: center;
+    }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <span class="logo">AWS</span>
+    <h1>EC2 Zonal Support Matrix</h1>
+  </div>
+  <span id="last-updated">Loading…</span>
+</header>
+
+<div class="filter-bar">
+  <div class="filter-group">
+    <label>Regions</label>
+    <select id="sel-region" multiple><option>Loading…</option></select>
+    <span class="filter-hint">Hold ⌘ / Ctrl to multi-select</span>
+  </div>
+  <div class="filter-group">
+    <label>Instance Family</label>
+    <select id="sel-family"><option value="">All Families</option></select>
+  </div>
+  <div class="filter-group">
+    <label>Instance Type</label>
+    <select id="sel-type" disabled><option value="">All Types</option></select>
+  </div>
+  <div class="filter-group">
+    <label>Search</label>
+    <input type="text" id="search" placeholder="e.g. c8a, xlarge…" style="min-width:190px">
+  </div>
+</div>
+
+<div class="stats-bar" id="stats">
+  <span>Loading data…</span>
+</div>
+
+<div class="table-wrapper">
+  <div id="output" class="message"><h2>Fetching data…</h2></div>
+</div>
+
+<div class="legend">
+  <span class="legend-item"><span class="check">✓</span> Available in this AZ</span>
+  <span class="legend-item"><span class="cross">—</span> Not available</span>
+</div>
+
+<script>
+'use strict';
+
+let allData = {};
+let meta    = {};
+
+// ── Bootstrap ───────────────────────────────────────────────────────────────
+
+async function init() {
+  try {
+    const resp = await fetch('metadata/ec2_instance_types.json');
+    if (!resp.ok) throw new Error(`HTTP ${resp.status} – could not load metadata`);
+    const raw = await resp.json();
+
+    meta    = raw._meta || {};
+    allData = Object.fromEntries(Object.entries(raw).filter(([k]) => k !== '_meta'));
+
+    const ts = meta.last_updated;
+    document.getElementById('last-updated').textContent = ts
+      ? `Last updated: ${new Date(ts).toLocaleString()}`
+      : '';
+
+    populateRegions();
+    attachListeners();
+    renderTable();
+  } catch (err) {
+    document.getElementById('output').innerHTML =
+      `<div class="message"><h2>Failed to load data</h2><p>${err.message}</p></div>`;
+    document.getElementById('stats').textContent = '';
+  }
+}
+
+// ── Filter population ────────────────────────────────────────────────────────
+
+function populateRegions() {
+  const sel     = document.getElementById('sel-region');
+  const regions = Object.keys(allData).sort();
+  sel.innerHTML = '';
+  regions.forEach(r => {
+    const opt = new Option(r, r);
+    opt.selected = (r === 'us-east-1');
+    sel.appendChild(opt);
+  });
+  // If us-east-1 not present, default to first
+  if (!regions.includes('us-east-1') && regions.length) sel.options[0].selected = true;
+  syncFamilySelect();
+}
+
+function getSelected(id) {
+  return Array.from(document.getElementById(id).selectedOptions).map(o => o.value);
+}
+
+function syncFamilySelect() {
+  const regions  = getSelected('sel-region');
+  const families = new Set();
+  regions.forEach(r => allData[r] && Object.keys(allData[r]).forEach(f => families.add(f)));
+
+  const sel  = document.getElementById('sel-family');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">All Families</option>';
+  [...families].sort().forEach(f => {
+    const opt = new Option(f, f);
+    if (f === prev) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  syncTypeSelect();
+}
+
+function syncTypeSelect() {
+  const regions = getSelected('sel-region');
+  const family  = document.getElementById('sel-family').value;
+  const sel     = document.getElementById('sel-type');
+  const prev    = sel.value;
+
+  if (!family) {
+    sel.innerHTML = '<option value="">All Types</option>';
+    sel.disabled  = true;
+    return;
+  }
+
+  const types = new Set();
+  regions.forEach(r => {
+    if (allData[r]?.[family]) Object.keys(allData[r][family]).forEach(t => types.add(t));
+  });
+
+  sel.innerHTML = '<option value="">All Types</option>';
+  sel.disabled  = false;
+  [...types].sort().forEach(t => {
+    const opt = new Option(t, t);
+    if (t === prev) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+// ── Event wiring ─────────────────────────────────────────────────────────────
+
+function attachListeners() {
+  document.getElementById('sel-region').addEventListener('change', () => {
+    syncFamilySelect(); renderTable();
+  });
+  document.getElementById('sel-family').addEventListener('change', () => {
+    syncTypeSelect(); renderTable();
+  });
+  document.getElementById('sel-type').addEventListener('change', renderTable);
+
+  let debounce;
+  document.getElementById('search').addEventListener('input', () => {
+    clearTimeout(debounce);
+    debounce = setTimeout(renderTable, 120);
+  });
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
+
+function renderTable() {
+  const regions     = getSelected('sel-region');
+  const family      = document.getElementById('sel-family').value;
+  const type        = document.getElementById('sel-type').value;
+  const search      = document.getElementById('search').value.toLowerCase().trim();
+  const multiRegion = regions.length > 1;
+
+  const rows     = [];
+  const zonesSet = new Set();
+
+  for (const region of regions) {
+    const regionData = allData[region] || {};
+    const families   = family
+      ? (regionData[family] ? { [family]: regionData[family] } : {})
+      : regionData;
+
+    for (const [fam, types] of Object.entries(families)) {
+      const filteredTypes = type
+        ? (types[type] ? { [type]: types[type] } : {})
+        : types;
+
+      for (const [itype, azLetters] of Object.entries(filteredTypes)) {
+        if (search &&
+            !itype.toLowerCase().includes(search) &&
+            !fam.toLowerCase().includes(search)) continue;
+
+        azLetters.forEach(z => zonesSet.add(z));
+        rows.push({ region, family: fam, itype, azSet: new Set(azLetters) });
+      }
+    }
+  }
+
+  const zones = [...zonesSet].sort();
+
+  // Stats bar
+  document.getElementById('stats').innerHTML =
+    `<span><strong>${rows.length}</strong> instance types</span>` +
+    `<span><strong>${regions.length}</strong> region(s)</span>` +
+    `<span><strong>${zones.length}</strong> AZ(s) found</span>`;
+
+  const out = document.getElementById('output');
+
+  if (!rows.length) {
+    out.innerHTML = '<div class="message"><h2>No results</h2><p>Try adjusting your filters or search.</p></div>';
+    return;
+  }
+
+  // Table
+  let html = '<table><thead><tr>';
+  if (multiRegion) html += '<th>Region</th>';
+  html += '<th>Family</th><th>Instance Type</th>';
+  zones.forEach(z => html += `<th class="zone">Zone ${z.toUpperCase()}</th>`);
+  html += '</tr></thead><tbody>';
+
+  let prevKey = null;
+
+  for (const row of rows) {
+    const rowKey = `${row.region}::${row.family}`;
+    const sepClass = (prevKey && rowKey !== prevKey) ? ' class="family-sep"' : '';
+    html += `<tr${sepClass}>`;
+    if (multiRegion) html += `<td class="cell-region">${row.region}</td>`;
+    html += `<td class="cell-family">${row.family}</td>`;
+    html += `<td class="cell-type">${row.itype}</td>`;
+    zones.forEach(z => {
+      html += row.azSet.has(z)
+        ? '<td class="zone"><span class="check">✓</span></td>'
+        : '<td class="zone"><span class="cross">—</span></td>';
+    });
+    html += '</tr>';
+    prevKey = rowKey;
+  }
+
+  html += '</tbody></table>';
+  out.innerHTML = html;
+}
+
+init();
+</script>
+</body>
+</html>
