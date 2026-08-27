@@ -25,3 +25,8 @@ env/
 
 # Notebooks
 *.ipynb
+
+# Graphify local token-saving codebase engine
+graphify-out/
+.claude/
+CLAUDE.md
