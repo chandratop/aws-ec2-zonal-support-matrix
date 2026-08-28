@@ -139,7 +139,7 @@
 
     /* ── Legend ── */
     .legend {
-      padding: 10px 24px 20px;
+      padding: 10px 24px 4px;
       display: flex;
       gap: 20px;
       font-size: 12px;
@@ -147,6 +147,42 @@
       align-items: center;
     }
     .legend-item { display: flex; align-items: center; gap: 5px; }
+
+    /* ── AZ mapping callout ── */
+    .az-callout {
+      margin: 0 24px 24px;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--aws-orange);
+      border-radius: 4px;
+      background: var(--white);
+      padding: 12px 16px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .az-callout strong { color: var(--text); display: block; margin-bottom: 6px; font-size: 13px; }
+    .az-callout pre {
+      background: #1E2533;
+      color: #E8EDF2;
+      border-radius: 4px;
+      padding: 10px 14px;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 12px;
+      overflow-x: auto;
+      margin-top: 8px;
+      white-space: pre;
+    }
+    .copy-btn {
+      float: right;
+      margin-top: -2px;
+      padding: 2px 8px;
+      font-size: 11px;
+      border: 1px solid #555;
+      border-radius: 3px;
+      background: #2D3748;
+      color: #CBD5E0;
+      cursor: pointer;
+    }
+    .copy-btn:hover { background: #4A5568; }
   </style>
 </head>
 <body>
@@ -190,6 +226,13 @@
 <div class="legend">
   <span class="legend-item"><span class="check">✓</span> Available in this AZ</span>
   <span class="legend-item"><span class="cross">—</span> Not available</span>
+  <span class="legend-item" style="margin-left:auto;color:var(--muted)">Columns show physical AZ IDs (account-agnostic)</span>
+</div>
+
+<div class="az-callout">
+  <strong>Find your account's AZ letter → AZ ID mapping</strong>
+  AZ letters (e.g. <code>eu-west-1a</code>) differ per AWS account. Use the command below to map them to the physical AZ IDs shown in this table.
+  <pre id="az-cmd"><button class="copy-btn" onclick="copyCmd()">Copy</button><span id="az-cmd-text"></span></pre>
 </div>
 
 <script>
@@ -327,13 +370,13 @@ function renderTable() {
         ? (types[type] ? { [type]: types[type] } : {})
         : types;
 
-      for (const [itype, azLetters] of Object.entries(filteredTypes)) {
+      for (const [itype, azIds] of Object.entries(filteredTypes)) {
         if (search &&
             !itype.toLowerCase().includes(search) &&
             !fam.toLowerCase().includes(search)) continue;
 
-        azLetters.forEach(z => zonesSet.add(z));
-        rows.push({ region, family: fam, itype, azSet: new Set(azLetters) });
+        azIds.forEach(z => zonesSet.add(z));
+        rows.push({ region, family: fam, itype, azSet: new Set(azIds) });
       }
     }
   }
@@ -346,6 +389,14 @@ function renderTable() {
     `<span><strong>${regions.length}</strong> region(s)</span>` +
     `<span><strong>${zones.length}</strong> AZ(s) found</span>`;
 
+  // CLI mapping command — one block per selected region
+  const cmdLines = regions.map(r =>
+    `aws ec2 describe-availability-zones --region ${r} \\\n` +
+    `  --query 'AvailabilityZones[*].{AZ_ID:ZoneId,Letter:ZoneName}' \\\n` +
+    `  --output table`
+  ).join('\n\n');
+  document.getElementById('az-cmd-text').textContent = cmdLines;
+
   const out = document.getElementById('output');
 
   if (!rows.length) {
@@ -357,7 +408,7 @@ function renderTable() {
   let html = '<table><thead><tr>';
   if (multiRegion) html += '<th>Region</th>';
   html += '<th>Family</th><th>Instance Type</th>';
-  zones.forEach(z => html += `<th class="zone">Zone ${z.toUpperCase()}</th>`);
+  zones.forEach(z => html += `<th class="zone">${z}</th>`);
   html += '</tr></thead><tbody>';
 
   let prevKey = null;
@@ -380,6 +431,15 @@ function renderTable() {
 
   html += '</tbody></table>';
   out.innerHTML = html;
+}
+
+function copyCmd() {
+  const text = document.getElementById('az-cmd-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+  });
 }
 
 init();

@@ -43,17 +43,32 @@ def get_regions(session: boto3.Session, all_regions: bool = False) -> list[str]:
     )
 
 
-def fetch_region_offerings(session: boto3.Session, region: str) -> dict:
+def get_az_id_map(session: boto3.Session, region: str) -> dict[str, str]:
     """
-    Return { family: { instance_type: [sorted_zone_letters] } } for a region.
+    Return { az_name: az_id } for a region, e.g. {"eu-west-1a": "euw1-az1"}.
 
-    Fetches all AZ-level offerings in a single paginated sweep. The zone value
-    stored is just the trailing letter (e.g. "a" from "eu-west-1a") so the
-    matrix renders uniformly across regions.
+    AZ IDs are stable physical identifiers that are consistent across all AWS
+    accounts, unlike AZ letters which are shuffled per-account for load spreading.
     """
     ec2 = session.client("ec2", region_name=region)
-    paginator = ec2.get_paginator("describe_instance_type_offerings")
+    zones = ec2.describe_availability_zones(
+        Filters=[{"Name": "state", "Values": ["available"]}]
+    )["AvailabilityZones"]
+    return {z["ZoneName"]: z["ZoneId"] for z in zones}
 
+
+def fetch_region_offerings(session: boto3.Session, region: str) -> dict:
+    """
+    Return { family: { instance_type: [sorted_az_ids] } } for a region.
+
+    AZ IDs (e.g. "euw1-az1") are used instead of letter suffixes so the data
+    is account-agnostic — AWS shuffles letter-to-physical mappings per account.
+    """
+    ec2 = session.client("ec2", region_name=region)
+
+    az_id_map = get_az_id_map(session, region)  # {"eu-west-1a": "euw1-az1", ...}
+
+    paginator = ec2.get_paginator("describe_instance_type_offerings")
     offerings: list[dict] = []
     for page in paginator.paginate(LocationType="availability-zone"):
         offerings.extend(page["InstanceTypeOfferings"])
@@ -61,15 +76,16 @@ def fetch_region_offerings(session: boto3.Session, region: str) -> dict:
     region_data: dict[str, dict[str, list[str]]] = defaultdict(lambda: defaultdict(list))
 
     for item in offerings:
-        instance_type = item["InstanceType"]   # e.g. "c8a.xlarge"
-        zone_letter = item["Location"][-1]     # "a" from "eu-west-1a"
-        family = instance_type.split(".")[0]   # "c8a"
-        region_data[family][instance_type].append(zone_letter)
+        instance_type = item["InstanceType"]          # e.g. "c8a.xlarge"
+        az_name = item["Location"]                    # e.g. "eu-west-1a"
+        az_id = az_id_map.get(az_name, az_name)       # e.g. "euw1-az1"
+        family = instance_type.split(".")[0]           # e.g. "c8a"
+        region_data[family][instance_type].append(az_id)
 
     return {
         family: {
-            itype: sorted(set(azs))
-            for itype, azs in sorted(types.items())
+            itype: sorted(set(az_ids))
+            for itype, az_ids in sorted(types.items())
         }
         for family, types in sorted(region_data.items())
     }
