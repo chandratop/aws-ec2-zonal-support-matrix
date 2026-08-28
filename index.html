@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,8 +16,22 @@
       --text:       #16191F;
       --muted:      #5F6B7A;
       --green:      #067340;
-      --red:        #D13212;
       --hover-row:  #EFF6FF;
+      --callout-bg: #FFFFFF;
+      --code-bg:    #1E2533;
+      --code-text:  #E8EDF2;
+    }
+
+    [data-theme="dark"] {
+      --bg:         #0D1117;
+      --white:      #161B22;
+      --border:     #30363D;
+      --text:       #E6EDF3;
+      --muted:      #8B949E;
+      --hover-row:  #1C2128;
+      --callout-bg: #161B22;
+      --code-bg:    #0D1117;
+      --code-text:  #C9D1D9;
     }
 
     body {
@@ -25,12 +39,13 @@
       background: var(--bg);
       color: var(--text);
       font-size: 14px;
+      transition: background 0.2s, color 0.2s;
     }
 
     /* ── Header ── */
     header {
       background: var(--aws-dark);
-      padding: 12px 24px;
+      padding: 10px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -39,10 +54,33 @@
       top: 0;
       z-index: 100;
     }
-    .header-left { display: flex; align-items: center; gap: 12px; }
-    .logo { font-weight: 800; font-size: 18px; color: var(--aws-orange); letter-spacing: -0.5px; }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+
+    /* AWS logo SVG */
+    .aws-logo-svg { display: block; flex-shrink: 0; }
+
     header h1 { font-size: 15px; font-weight: 500; color: #EAECEE; }
+
+    .header-right { display: flex; align-items: center; gap: 16px; }
     #last-updated { font-size: 11px; color: #AAB7B8; white-space: nowrap; }
+
+    /* Dark mode toggle */
+    .theme-toggle {
+      background: none;
+      border: 1px solid #4A5568;
+      border-radius: 20px;
+      padding: 4px 10px;
+      cursor: pointer;
+      color: #AAB7B8;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: border-color 0.2s;
+      white-space: nowrap;
+    }
+    .theme-toggle:hover { border-color: var(--aws-orange); color: var(--aws-orange); }
+    .theme-toggle .icon { font-size: 13px; }
 
     /* ── Filters ── */
     .filter-bar {
@@ -86,83 +124,21 @@
     }
     .stats-bar strong { color: var(--text); }
 
-    /* ── Table ── */
-    .table-wrapper { padding: 20px 24px; overflow-x: auto; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: var(--white);
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-    }
-    thead tr th {
-      background: var(--aws-dark);
-      color: #EAECEE;
-      padding: 10px 14px;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      white-space: nowrap;
-      text-align: left;
-    }
-    thead tr th.zone { text-align: center; min-width: 58px; }
-    td {
-      padding: 7px 14px;
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-      vertical-align: middle;
-    }
-    td.zone { text-align: center; }
-    tr:last-child td { border-bottom: none; }
-    tbody tr:hover td { background: var(--hover-row); }
-
-    .cell-family { font-weight: 600; color: var(--aws-dark); }
-    .cell-type   { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; font-size: 12.5px; }
-    .cell-region { font-size: 12px; color: var(--muted); }
-
-    .check { color: var(--green); font-size: 15px; font-weight: 700; }
-    .cross { color: var(--border); font-size: 13px; }
-
-    /* family boundary row */
-    tr.family-sep td { border-top: 2px solid #E8EAED; }
-
-    /* ── Empty / loading ── */
-    .message {
-      text-align: center;
-      padding: 56px 24px;
-      color: var(--muted);
-    }
-    .message h2 { font-size: 17px; margin-bottom: 8px; color: var(--text); }
-
-    /* ── Legend ── */
-    .legend {
-      padding: 10px 24px 4px;
-      display: flex;
-      gap: 20px;
-      font-size: 12px;
-      color: var(--muted);
-      align-items: center;
-    }
-    .legend-item { display: flex; align-items: center; gap: 5px; }
-
     /* ── AZ mapping callout ── */
     .az-callout {
-      margin: 0 24px 24px;
+      margin: 16px 24px 0;
       border: 1px solid var(--border);
       border-left: 4px solid var(--aws-orange);
       border-radius: 4px;
-      background: var(--white);
+      background: var(--callout-bg);
       padding: 12px 16px;
       font-size: 12px;
       color: var(--muted);
     }
-    .az-callout strong { color: var(--text); display: block; margin-bottom: 6px; font-size: 13px; }
+    .az-callout strong { color: var(--text); display: block; margin-bottom: 4px; font-size: 13px; }
     .az-callout pre {
-      background: #1E2533;
-      color: #E8EDF2;
+      background: var(--code-bg);
+      color: var(--code-text);
       border-radius: 4px;
       padding: 10px 14px;
       font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
@@ -183,16 +159,85 @@
       cursor: pointer;
     }
     .copy-btn:hover { background: #4A5568; }
+
+    /* ── Table ── */
+    .table-wrapper { padding: 16px 24px 20px; overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--white);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+    thead tr th {
+      background: var(--aws-dark);
+      color: #EAECEE;
+      padding: 10px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      text-align: left;
+    }
+    thead tr th.zone { text-align: center; min-width: 90px; }
+    td {
+      padding: 7px 14px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+    td.zone { text-align: center; }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--hover-row); }
+
+    .cell-family { font-weight: 600; color: var(--aws-dark); }
+    [data-theme="dark"] .cell-family { color: var(--aws-orange); }
+    .cell-type   { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; font-size: 12.5px; }
+    .cell-region { font-size: 12px; color: var(--muted); }
+
+    .check { color: var(--green); font-size: 15px; font-weight: 700; }
+    .cross { color: var(--border); font-size: 13px; }
+
+    tr.family-sep td { border-top: 2px solid var(--border); }
+
+    /* ── Empty / loading ── */
+    .message { text-align: center; padding: 56px 24px; color: var(--muted); }
+    .message h2 { font-size: 17px; margin-bottom: 8px; color: var(--text); }
+
+    /* ── Legend ── */
+    .legend {
+      padding: 10px 24px 20px;
+      display: flex;
+      gap: 20px;
+      font-size: 12px;
+      color: var(--muted);
+      align-items: center;
+    }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
   </style>
 </head>
 <body>
 
 <header>
   <div class="header-left">
-    <span class="logo">AWS</span>
+    <!-- AWS logo -->
+    <svg class="aws-logo-svg" width="50" height="30" viewBox="0 0 50 30" xmlns="http://www.w3.org/2000/svg">
+      <text x="1" y="20" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="21" fill="#FF9900" letter-spacing="-0.5">aws</text>
+      <path d="M3 25 Q25 33 47 25" stroke="#FF9900" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+      <polygon points="44,23 48,25 44,27.5" fill="#FF9900"/>
+    </svg>
     <h1>EC2 Zonal Support Matrix</h1>
   </div>
-  <span id="last-updated">Loading…</span>
+  <div class="header-right">
+    <span id="last-updated"></span>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+      <span class="icon" id="theme-icon">🌙</span>
+      <span id="theme-label">Dark</span>
+    </button>
+  </div>
 </header>
 
 <div class="filter-bar">
@@ -219,6 +264,12 @@
   <span>Loading data…</span>
 </div>
 
+<div class="az-callout">
+  <strong>Find your account's AZ letter → AZ ID mapping</strong>
+  AZ letters (e.g. <code>eu-west-1a</code>) are shuffled per AWS account for load balancing. Use the command below to map your account's letters to the physical AZ IDs shown in this table.
+  <pre id="az-cmd"><button class="copy-btn" onclick="copyCmd()">Copy</button><span id="az-cmd-text"></span></pre>
+</div>
+
 <div class="table-wrapper">
   <div id="output" class="message"><h2>Fetching data…</h2></div>
 </div>
@@ -226,13 +277,7 @@
 <div class="legend">
   <span class="legend-item"><span class="check">✓</span> Available in this AZ</span>
   <span class="legend-item"><span class="cross">—</span> Not available</span>
-  <span class="legend-item" style="margin-left:auto;color:var(--muted)">Columns show physical AZ IDs (account-agnostic)</span>
-</div>
-
-<div class="az-callout">
-  <strong>Find your account's AZ letter → AZ ID mapping</strong>
-  AZ letters (e.g. <code>eu-west-1a</code>) differ per AWS account. Use the command below to map them to the physical AZ IDs shown in this table.
-  <pre id="az-cmd"><button class="copy-btn" onclick="copyCmd()">Copy</button><span id="az-cmd-text"></span></pre>
+  <span class="legend-item" style="margin-left:auto">Columns show physical AZ IDs (account-agnostic)</span>
 </div>
 
 <script>
@@ -241,7 +286,23 @@
 let allData = {};
 let meta    = {};
 
-// ── Bootstrap ───────────────────────────────────────────────────────────────
+// ── Theme ────────────────────────────────────────────────────────────────────
+
+function applyTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  document.getElementById('theme-icon').textContent  = dark ? '☀️' : '🌙';
+  document.getElementById('theme-label').textContent = dark ? 'Light' : 'Dark';
+  localStorage.setItem('theme', dark ? 'dark' : 'light');
+}
+
+function toggleTheme() {
+  applyTheme(document.documentElement.getAttribute('data-theme') !== 'dark');
+}
+
+// Restore saved preference
+applyTheme(localStorage.getItem('theme') === 'dark');
+
+// ── Bootstrap ────────────────────────────────────────────────────────────────
 
 async function init() {
   try {
@@ -267,7 +328,14 @@ async function init() {
   }
 }
 
-// ── Filter population ────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+// Natural sort so euw1-az1 < euw1-az2 < euw1-az10
+function naturalSort(a, b) {
+  return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+}
+
+// ── Filter population ─────────────────────────────────────────────────────────
 
 function populateRegions() {
   const sel     = document.getElementById('sel-region');
@@ -278,7 +346,6 @@ function populateRegions() {
     opt.selected = (r === 'us-east-1');
     sel.appendChild(opt);
   });
-  // If us-east-1 not present, default to first
   if (!regions.includes('us-east-1') && regions.length) sel.options[0].selected = true;
   syncFamilySelect();
 }
@@ -295,7 +362,7 @@ function syncFamilySelect() {
   const sel  = document.getElementById('sel-family');
   const prev = sel.value;
   sel.innerHTML = '<option value="">All Families</option>';
-  [...families].sort().forEach(f => {
+  [...families].sort(naturalSort).forEach(f => {
     const opt = new Option(f, f);
     if (f === prev) opt.selected = true;
     sel.appendChild(opt);
@@ -322,14 +389,14 @@ function syncTypeSelect() {
 
   sel.innerHTML = '<option value="">All Types</option>';
   sel.disabled  = false;
-  [...types].sort().forEach(t => {
+  [...types].sort(naturalSort).forEach(t => {
     const opt = new Option(t, t);
     if (t === prev) opt.selected = true;
     sel.appendChild(opt);
   });
 }
 
-// ── Event wiring ─────────────────────────────────────────────────────────────
+// ── Event wiring ──────────────────────────────────────────────────────────────
 
 function attachListeners() {
   document.getElementById('sel-region').addEventListener('change', () => {
@@ -347,7 +414,7 @@ function attachListeners() {
   });
 }
 
-// ── Render ───────────────────────────────────────────────────────────────────
+// ── Render ────────────────────────────────────────────────────────────────────
 
 function renderTable() {
   const regions     = getSelected('sel-region');
@@ -381,7 +448,8 @@ function renderTable() {
     }
   }
 
-  const zones = [...zonesSet].sort();
+  // Sort AZ IDs numerically (euw1-az1, euw1-az2, ..., euw1-az10)
+  const zones = [...zonesSet].sort(naturalSort);
 
   // Stats bar
   document.getElementById('stats').innerHTML =
@@ -389,7 +457,7 @@ function renderTable() {
     `<span><strong>${regions.length}</strong> region(s)</span>` +
     `<span><strong>${zones.length}</strong> AZ(s) found</span>`;
 
-  // CLI mapping command — one block per selected region
+  // CLI mapping command
   const cmdLines = regions.map(r =>
     `aws ec2 describe-availability-zones --region ${r} \\\n` +
     `  --query 'AvailabilityZones[*].{AZ_ID:ZoneId,Letter:ZoneName}' \\\n` +
@@ -404,7 +472,6 @@ function renderTable() {
     return;
   }
 
-  // Table
   let html = '<table><thead><tr>';
   if (multiRegion) html += '<th>Region</th>';
   html += '<th>Family</th><th>Instance Type</th>';
@@ -414,7 +481,7 @@ function renderTable() {
   let prevKey = null;
 
   for (const row of rows) {
-    const rowKey = `${row.region}::${row.family}`;
+    const rowKey   = `${row.region}::${row.family}`;
     const sepClass = (prevKey && rowKey !== prevKey) ? ' class="family-sep"' : '';
     html += `<tr${sepClass}>`;
     if (multiRegion) html += `<td class="cell-region">${row.region}</td>`;
